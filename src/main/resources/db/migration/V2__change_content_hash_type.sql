@@ -1,0 +1,1 @@
+ALTER TABLE documents ALTER COLUMN content_hash TYPE VARCHAR(64)
