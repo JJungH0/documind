@@ -1,5 +1,7 @@
 package com.documind.domain.document.parser;
 
+import com.documind.global.exception.BusinessException;
+import com.documind.global.exception.ErrorCode;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -18,7 +20,7 @@ public class PdfParser {
         try (PDDocument document = Loader.loadPDF(path.toFile())) {
 
             if (document.isEncrypted()) {
-                throw new IllegalArgumentException("암호화된 PDF는 처리할 수 없습니다.");
+                throw new BusinessException(ErrorCode.ENCRYPTED_PDF);
             }
 
             int pageCount = document.getNumberOfPages();
@@ -39,7 +41,7 @@ public class PdfParser {
 
             return new ParseResult(text.toString(), pageCount);
         } catch (IOException e) {
-            throw new IllegalStateException("PDF 파싱에 실패했습니다. " + path, e);
+            throw new BusinessException(ErrorCode.PDF_PARSE_FAILED, e);
         }
     }
 

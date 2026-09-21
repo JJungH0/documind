@@ -1,6 +1,8 @@
 package com.documind.domain.document.service;
 
 import com.documind.global.config.StorageProperties;
+import com.documind.global.exception.BusinessException;
+import com.documind.global.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,9 +42,9 @@ public class FileStorage {
             }
             return HexFormat.of().formatHex(digest.digest());
         } catch (IOException e) {
-            throw new IllegalStateException("파일 해시 계산에 실패했습니다.", e);
+            throw new BusinessException(ErrorCode.FILE_STORAGE_FAILED, e);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 알고리즘을 사용할 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e);
         }
     }
 
@@ -58,7 +60,7 @@ public class FileStorage {
             }
             return relativePath;
         } catch (IOException e) {
-            throw new IllegalStateException("파일 저장에 실패했습니다.", e);
+            throw new BusinessException(ErrorCode.FILE_STORAGE_FAILED, e);
         }
     }
 
