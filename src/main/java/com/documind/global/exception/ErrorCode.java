@@ -24,7 +24,8 @@ public enum ErrorCode {
     NO_EXTRACTABLE_TEXT(HttpStatus.BAD_REQUEST, "D006", "텍스트를 추출할 수 없는 PDF입니다."),
     FILE_STORAGE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "D007", "파일 저장에 실패했습니다."),
     PDF_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "D008", "PDF 파싱에 실패했습니다."),
-    FILE_SIZE_EXCEEDED(HttpStatus.CONTENT_TOO_LARGE, "D009", "업로드 가능한 최대 파일 크기를 초과했습니다.");
+    FILE_SIZE_EXCEEDED(HttpStatus.CONTENT_TOO_LARGE, "D009", "업로드 가능한 최대 파일 크기를 초과했습니다."),
+    INVALID_CHUNK_OPTION(HttpStatus.BAD_REQUEST, "D010", "청킹 옵션이 올바르지 않습니다.");
 
 
     private final HttpStatus status;
