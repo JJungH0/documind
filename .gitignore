@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### 저장소 ###
+storage/
+.env
+*.log
