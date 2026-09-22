@@ -27,7 +27,8 @@ public enum ErrorCode {
     FILE_SIZE_EXCEEDED(HttpStatus.CONTENT_TOO_LARGE, "D009", "업로드 가능한 최대 파일 크기를 초과했습니다."),
     INVALID_CHUNK_OPTION(HttpStatus.BAD_REQUEST, "D010", "청킹 옵션이 올바르지 않습니다."),
     JOB_NOT_FOUND(HttpStatus.NOT_FOUND, "D011", "처리 작업을 찾을 수 없습니다."),
-    EMBEDDING_FAILED(HttpStatus.BAD_GATEWAY, "D012", "임베딩 생성에 실패했습니다.");
+    EMBEDDING_FAILED(HttpStatus.BAD_GATEWAY, "D012", "임베딩 생성에 실패했습니다."),
+    JOB_NOT_READY(HttpStatus.CONFLICT, "D013", "임베딩이 완료되지 않은 작업입니다.");
 
 
     private final HttpStatus status;
