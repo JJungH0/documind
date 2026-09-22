@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 @Component
 public class TextChunker {
 
-    private static final int MIN_CHUNK_SIZE = 100;
-    private static final int MAX_CHUNK_SIZE = 4000;
+    public static final int MIN_CHUNK_SIZE = 100;
+    public static final int MAX_CHUNK_SIZE = 4000;
 
     private static final Pattern PAGE_MARKER = Pattern.compile(
             Pattern.quote(PdfParser.PAGE_DELIMITER_PREFIX)

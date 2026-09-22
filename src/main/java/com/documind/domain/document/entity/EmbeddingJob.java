@@ -82,7 +82,7 @@ public class EmbeddingJob {
     }
 
     public void start() {
-        this.status = JobStatus.PARSING;
+        this.status = JobStatus.CHUNKING;
         this.startedAt = Instant.now();
     }
 
