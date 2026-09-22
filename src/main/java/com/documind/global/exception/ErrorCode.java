@@ -12,6 +12,7 @@ public enum ErrorCode {
      */
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "C001", "입력값이 올바르지 않습니다."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C002", "서버 내부 오류가 발생했습니다."),
+    MALFORMED_REQUEST_BODY(HttpStatus.BAD_REQUEST, "C003", "요청 본문의 형식이 올바르지 않습니다."),
 
     /**
      * 문서
