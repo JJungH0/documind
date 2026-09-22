@@ -59,4 +59,6 @@ management:
 documind:
   storage:
     location: ./storage/documents
+  embedding:
+    batch-size: 100
 
