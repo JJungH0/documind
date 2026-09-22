@@ -21,13 +21,13 @@ public class EmbeddingJobController {
     private final EmbeddingJobService embeddingJobService;
 
     @Operation(summary = "처리 작업 생성",
-            description = "지정한 청킹 파라미터로 문서를 청크로 분활함.")
+            description = "지정한 청킹 파라미터로 문서를 청크로 분활하고 임베딩을 생성함. (동기 처리)")
     @PostMapping("/documents/{documentId}/jobs")
     public ResponseEntity<ApiResponse<JobResponse>> create(
             @PathVariable Long documentId,
             @Valid @RequestBody CreateJobRequest req){
 
-        JobResponse response = embeddingJobService.createAndChunk(documentId, req);
+        JobResponse response = embeddingJobService.createAndProcess(documentId, req);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
