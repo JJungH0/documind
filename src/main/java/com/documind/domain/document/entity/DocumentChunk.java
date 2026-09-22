@@ -40,8 +40,10 @@ public class DocumentChunk {
 
     private Integer pageNumber;
 
+    public static final int EMBEDDING_DIMENSIONS = 1536;
+
     @JdbcTypeCode(SqlTypes.VECTOR)
-    @Array(length = 1536)
+    @Array(length = EMBEDDING_DIMENSIONS)
     private float[] embedding;
 
     @Column(nullable = false, updatable = false)
