@@ -25,35 +25,46 @@ public class ChunkSearchService {
     private final ChunkSearchRepository chunkSearchRepository;
 
     public SearchResponse search(Long jobId, SearchRequest req) {
-        EmbeddingJob job = embeddingJobRepository.findById(jobId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.JOB_NOT_FOUND,
-                        "ID: " + jobId));
-        if (job.getStatus() != JobStatus.COMPLETED) {
-            throw new BusinessException(ErrorCode.JOB_NOT_READY, "현재 상태: " + job.getStatus());
-        }
-
-        long embedStart = System.nanoTime();
-        ChunkEmbedder.EmbeddingResult embedded = chunkEmbedder.embed(List.of(req.query()));
-        long embedEnd = System.nanoTime();
-
-        List<SimilarChunk> chunks = chunkSearchRepository.findNearest(jobId, embedded.vectors().getFirst(), req.topK());
-        long searchEnd = System.nanoTime();
-
-        double embeddingMs = toMillis(embedStart, embedEnd);
-        double searchMs = toMillis(embedEnd, searchEnd);
-
-        log.info("검색 완료: jobId={}, topK={}, embeddingMs={}, searchMs={}, tokens={}",
-                jobId, req.topK(), embeddingMs, searchMs, embedded.totalTokens());
+        RetrievalResult result = retrieve(jobId, req.query(), req.topK());
 
         return new SearchResponse(
                 jobId,
                 req.query(),
                 req.topK(),
-                embedded.totalTokens(),
-                embeddingMs,
-                searchMs,
-                chunks.stream().map(SearchResponse.ChunkHit::from).toList()
+                result.queryTokens(),
+                result.embeddingMs(),
+                result.searchMs(),
+                result.chunks().stream().map(SearchResponse.ChunkHit::from).toList()
         );
+    }
+
+    public RetrievalResult retrieve(Long jobId, String query, int topK) {
+        EmbeddingJob job = embeddingJobRepository.findById(jobId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.JOB_NOT_FOUND, "ID: " + jobId));
+
+        if (job.getStatus() != JobStatus.COMPLETED) {
+            throw new BusinessException(ErrorCode.JOB_NOT_READY, "현재 상태: " + job.getStatus());
+        }
+
+        long embedStart = System.nanoTime();
+        ChunkEmbedder.EmbeddingResult embedded = chunkEmbedder.embed(List.of(query));
+        long embedEnd = System.nanoTime();
+
+        List<SimilarChunk> chunks = chunkSearchRepository.findNearest(jobId, embedded.vectors().getFirst(), topK);
+        long searchEnd = System.nanoTime();
+
+        RetrievalResult result = new RetrievalResult(
+                embedded.totalTokens(),
+                toMillis(embedStart, embedEnd),
+                toMillis(embedEnd, searchEnd),
+                chunks
+        );
+
+        log.info("검색 완료: jobId={}, topK={}, topSimilarity={}, embeddingMs={}, searchMs={}",
+                jobId, topK, result.topSimilarity(), result.embeddingMs(), result.searchMs());
+
+        return result;
+
     }
 
     private static double toMillis(long startNanos, long endNanos) {
