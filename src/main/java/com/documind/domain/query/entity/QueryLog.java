@@ -56,9 +56,9 @@ public class QueryLog {
         this.answer = answer;
         this.cacheHit = cacheHit;
         this.retrievedChunkCount = retrievedChunkCount;
-        this.embeddingTokens = Objects.nonNull(embeddingTokens) ? embeddingTokens : 0;
-        this.promptTokens = Objects.nonNull(promptTokens) ? promptTokens : 0;
-        this.completionTokens = Objects.nonNull(completionTokens) ? completionTokens : 0;
+        this.embeddingTokens = embeddingTokens;
+        this.promptTokens = promptTokens;
+        this.completionTokens = completionTokens;
         this.latencyMs = latencyMs;
     }
 
