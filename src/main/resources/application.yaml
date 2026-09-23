@@ -61,4 +61,7 @@ documind:
     location: ./storage/documents
   embedding:
     batch-size: 100
+  rag:
+    top-k: 5
+    min-similarity: 0.25
 

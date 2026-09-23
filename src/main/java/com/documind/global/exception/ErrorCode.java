@@ -8,14 +8,14 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
     /**
-     * 공통
+     * 공통 :
      */
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "C001", "입력값이 올바르지 않습니다."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C002", "서버 내부 오류가 발생했습니다."),
     MALFORMED_REQUEST_BODY(HttpStatus.BAD_REQUEST, "C003", "요청 본문의 형식이 올바르지 않습니다."),
 
     /**
-     * 문서
+     * 문서 :
      */
     DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "D001", "문서를 찾을 수 없습니다."),
     DUPLICATE_DOCUMENT(HttpStatus.CONFLICT, "D002", "이미 업로드된 문서입니다."),
@@ -29,8 +29,12 @@ public enum ErrorCode {
     INVALID_CHUNK_OPTION(HttpStatus.BAD_REQUEST, "D010", "청킹 옵션이 올바르지 않습니다."),
     JOB_NOT_FOUND(HttpStatus.NOT_FOUND, "D011", "처리 작업을 찾을 수 없습니다."),
     EMBEDDING_FAILED(HttpStatus.BAD_GATEWAY, "D012", "임베딩 생성에 실패했습니다."),
-    JOB_NOT_READY(HttpStatus.CONFLICT, "D013", "임베딩이 완료되지 않은 작업입니다.");
+    JOB_NOT_READY(HttpStatus.CONFLICT, "D013", "임베딩이 완료되지 않은 작업입니다."),
 
+    /**
+     * 질의 :
+     */
+    ANSWER_GENERATION_FAILED(HttpStatus.BAD_GATEWAY, "Q001", "답변 생성에 실패했습니다.");
 
     private final HttpStatus status;
     private final String code;
