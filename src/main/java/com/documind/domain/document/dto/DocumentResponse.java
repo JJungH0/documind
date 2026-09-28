@@ -1,6 +1,7 @@
 package com.documind.domain.document.dto;
 
 import com.documind.domain.document.entity.Document;
+import com.documind.domain.document.repository.DocumentSummary;
 
 import java.time.Instant;
 
@@ -19,6 +20,16 @@ public record DocumentResponse(
                 document.getFileSize(),
                 document.getPageCount(),
                 document.getCreatedAt()
+        );
+    }
+
+    public static DocumentResponse from(DocumentSummary summary) {
+        return new DocumentResponse(
+                summary.id(),
+                summary.originalFilename(),
+                summary.fileSize(),
+                summary.pageCount(),
+                summary.createdAt()
         );
     }
 }

@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "EmbeddingJob", description = "청킹·임베딩 처리 작업")
 @RestController
 @RequestMapping("/api")
@@ -39,5 +41,12 @@ public class EmbeddingJobController {
     @GetMapping("/jobs/{jobId}")
     public ApiResponse<JobResponse> get(@PathVariable Long jobId) {
         return ApiResponse.success(embeddingJobService.getJob(jobId));
+    }
+
+    @Operation(summary = "문서별 처리 작업 목록",
+            description = "최근 작업 순으로 반환한다.")
+    @GetMapping("/documents/{documentId}/jobs")
+    public ApiResponse<List<JobResponse>> listByDocument(@PathVariable Long documentId) {
+        return ApiResponse.success(embeddingJobService.getJobsByDocument(documentId));
     }
 }
