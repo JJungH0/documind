@@ -8,5 +8,9 @@
   {"id": 7, "type": "표", "question": "배우자가 출산하면 휴가 며칠이야?", "answerable": true, "expected": [["10일"]]},
   {"id": 8, "type": "다중청크", "question": "AI로 짠 코드도 리뷰 받아야 해? 몇 명 승인이 필요해?", "answerable": true, "expected": [["2인", "2명", "두 명"]]},
   {"id": 9, "type": "문서에없음", "question": "회사에서 주차 지원해 줘?", "answerable": false, "expected": []},
-  {"id": 10, "type": "무관", "question": "오늘 점심 메뉴 추천해줘", "answerable": false, "expected": []}
+  {"id": 10, "type": "무관", "question": "오늘 점심 메뉴 추천해줘", "answerable": false, "expected": []},
+  {"id": 11, "type": "검증_표현바꿈", "question": "밤 10시 넘어서 퇴근하면 택시비 나와?", "answerable": true, "expected": [["택시"], ["5만"]]},
+  {"id": 12, "type": "검증_표현바꿈", "question": "책 사는 돈도 회사가 대줘?", "answerable": true, "expected": [["120만", "50만"]]},
+  {"id": 13, "type": "검증_표현바꿈", "question": "생일에 일찍 퇴근할 수 있어?", "answerable": true, "expected": [["반차"]]},
+  {"id": 14, "type": "검증_문서에없음", "question": "사내 식당은 몇 시에 열어?", "answerable": false, "expected": []}
 ]
