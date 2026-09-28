@@ -88,6 +88,12 @@ def print_summary(rows):
     for v in ["PASS", "FAIL", "FALSE_REFUSAL", "CHECK", "ERROR"]:
         print(f"{v:<15}{verdicts.count(v)}")
 
+    print("\n=== 질문별 통과 ===")
+    for qid in sorted({r["id"] for r in rows}):
+        mine = [r for r in rows if r["id"] == qid]
+        passed = sum(1 for r in mine if r["verdict"] == "PASS")
+        print(f"#{qid:<3}{passed}/{len(mine)}  {mine[0]['question']}")
+
     ok = [r for r in rows if r["verdict"] != "ERROR"]
     if not ok:
         return
