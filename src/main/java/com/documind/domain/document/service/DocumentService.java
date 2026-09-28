@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -61,6 +62,14 @@ public class DocumentService {
                 document.getId(), result.pageCount(), result.text().length());
 
         return DocumentResponse.from(document);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DocumentResponse> getDocuments() {
+        return documentRepository.findAllSummaries()
+                .stream()
+                .map(DocumentResponse::from)
+                .toList();
     }
 
     private void validate(MultipartFile file) {

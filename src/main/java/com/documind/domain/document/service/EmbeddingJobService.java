@@ -67,6 +67,17 @@ public class EmbeddingJobService {
         return JobResponse.from(findJob(jobId));
     }
 
+    @Transactional(readOnly = true)
+    public List<JobResponse> getJobsByDocument(Long documentId) {
+        if (!documentRepository.existsById(documentId)) {
+            throw new BusinessException(ErrorCode.DOCUMENT_NOT_FOUND, "ID: " + documentId);
+        }
+        return embeddingJobRepository.findByDocumentIdOrderByIdDesc(documentId)
+                .stream()
+                .map(JobResponse::from)
+                .toList();
+    }
+
     private Long createAndChunk(Long documentId, CreateJobRequest req) {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCUMENT_NOT_FOUND, "ID: " + documentId));

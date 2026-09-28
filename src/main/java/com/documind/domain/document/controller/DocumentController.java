@@ -9,11 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "Document", description = "문서 업로드 및 조회")
 @RestController
@@ -34,5 +33,12 @@ public class DocumentController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "문서 목록 조회",
+            description = "최근 업로드 순으로 반환한다. 추출 텍스트는 포함되지 않는다.")
+    @GetMapping
+    public ApiResponse<List<DocumentResponse>> list() {
+        return ApiResponse.success(documentService.getDocuments());
     }
 }
