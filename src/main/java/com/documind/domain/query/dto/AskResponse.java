@@ -10,6 +10,7 @@ public record AskResponse(
         String answer,
         AnswerStatus status,
         List<Source> sources,
+        int contextChars,
         long embeddingTokens,
         int promptTokens,
         int completionTokens,

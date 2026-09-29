@@ -62,6 +62,7 @@ documind:
   embedding:
     batch-size: 100
   rag:
-    top-k: 5
+    candidate-count: 20
+    context-char-limit: 2000
     min-similarity: 0.25
 

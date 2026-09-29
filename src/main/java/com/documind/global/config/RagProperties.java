@@ -8,20 +8,26 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @ConfigurationProperties(prefix = "documind.rag")
-public record RagProperties(int topK, double minSimilarity) {
+public record RagProperties(int candidateCount, int contextCharLimit, double minSimilarity) {
 
-    private static final int MAX_TOP_K = 20;
+    private static final int MAX_CANDIDATES = 20;
+    private static final int MIN_CONTEXT_CHARS = 500;
+    private static final int MAX_CONTEXT_CHARS = 8000;
 
     public RagProperties{
-        if (topK < 1 || topK > MAX_TOP_K) {
+        if (candidateCount < 1 || candidateCount > MAX_CANDIDATES) {
             throw new IllegalArgumentException(
-                    "documind.rag.top-k는 1~" + MAX_TOP_K + " 사이어야 함. (입력: " + topK + ")"
-            );
+                    "documind.rag.candidate-count는 1~" + MAX_CANDIDATES + " 사이여야 합니다. (입력: " + candidateCount + ")");
+        }
+        if (contextCharLimit < MIN_CONTEXT_CHARS || contextCharLimit > MAX_CONTEXT_CHARS) {
+            throw new IllegalArgumentException(
+                    "documind.rag.context-char-limit는 " + MIN_CONTEXT_CHARS + "~" + MAX_CONTEXT_CHARS
+                            + " 사이여야 합니다. (입력: " + contextCharLimit + ")");
         }
         if (minSimilarity < 0.0 || minSimilarity > 1.0) {
             throw new IllegalArgumentException(
-                    "documind.rag.min-similarity는 0.0~1.0 사이어야 합니다. (입력: " + minSimilarity + ")"
-            );
+                    "documind.rag.min-similarity는 0.0~1.0 사이여야 합니다. (입력: " + minSimilarity + ")");
         }
+
     }
 }
