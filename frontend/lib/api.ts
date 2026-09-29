@@ -25,6 +25,7 @@ export type JobResponse = {
     documentId: number;
     chunkSize: number;
     chunkOverlap: number;
+    chunkStrategy: "FIXED" | "ARTICLE";
     processingMode: "SYNC" | "ASYNC";
     status: JobStatus;
     totalChunks: number;
@@ -47,6 +48,7 @@ export type AskResponse = {
     answer: string;
     status: "ANSWERED" | "NO_RELEVANT_CONTEXT";
     sources: Source[];
+    contextChars: number;
     embeddingTokens: number;
     promptTokens: number;
     completionTokens: number;

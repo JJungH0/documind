@@ -54,7 +54,7 @@ public class QueryService {
         long startNanos = System.nanoTime();
         String question = req.question();
 
-        RetrievalResult retrieval = chunkSearchService.retrieve(jobId, question, ragProperties.topK());
+        RetrievalResult retrieval = chunkSearchService.retrieve(jobId, question, ragProperties.candidateCount());
 
         if (retrieval.topSimilarity() < ragProperties.minSimilarity()) {
             log.info("1단계 차단; jobId={}, topSimilarity={}, threshold={}",
@@ -63,7 +63,10 @@ public class QueryService {
                     Generation.skipped(NO_CONTEXT_ANSWER), AnswerStatus.NO_RELEVANT_CONTEXT);
         }
 
-        List<SimilarChunk> contextChunks = retrieval.chunks();
+        List<SimilarChunk> contextChunks = ContextSelector.selectWithinLimit(
+                retrieval.chunks(),
+                chunk -> chunk.content().length(),
+                ragProperties.contextCharLimit());
         Generation generation = generate(question, contextChunks);
 
         return complete(jobId, question, startNanos, retrieval, contextChunks,
@@ -113,6 +116,7 @@ public class QueryService {
     private AskResponse complete(Long jobId, String question, long startNanos, RetrievalResult retrieval,
                                  List<SimilarChunk> usedChunks, Generation generation, AnswerStatus status) {
         long totalMs = Math.round(toMillis(startNanos, System.nanoTime()));
+        int contextChars = usedChunks.stream().mapToInt(chunk -> chunk.content().length()).sum();
 
         Long queryLogId = transactionTemplate.execute(txStatus -> queryLogRepository.save(
                 QueryLog.builder()
@@ -134,8 +138,8 @@ public class QueryService {
                     return new AskResponse.Source(i + 1, chunk.chunkIndex(), chunk.pageNumber(), chunk.similarity());
                 }).toList();
 
-        log.info("질의 완료: queryLogId={}, status={}, promptTokens={}, completionTokens={}, totalMs={}",
-                queryLogId, status, generation.promptTokens(), generation.completionTokens(), totalMs);
+        log.info("질의 완료: queryLogId={}, sources={}, contextChars={},status={}, promptTokens={}, completionTokens={}, totalMs={}",
+                queryLogId, status, usedChunks.size(), contextChars,generation.promptTokens(), generation.completionTokens(), totalMs);
 
         return new AskResponse(
                 queryLogId,
@@ -143,6 +147,7 @@ public class QueryService {
                 generation.answer(),
                 status,
                 sources,
+                contextChars,
                 retrieval.queryTokens(),
                 generation.promptTokens(),
                 generation.completionTokens(),

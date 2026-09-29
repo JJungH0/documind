@@ -43,6 +43,7 @@ export default function AssistantMessage({ response }: { response: AskResponse }
                 <details className="mt-3 text-xs text-muted">
                     <summary className="cursor-pointer select-none">처리 정보</summary>
                     <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 tabular-nums sm:grid-cols-4">
+                        <Metric label="보낸 발췌" value={`${response.sources.length}개, ${response.contextChars.toLocaleString()}자`} />
                         <Metric label="입력 토큰" value={response.promptTokens.toLocaleString()} />
                         <Metric label="출력 토큰" value={response.completionTokens.toLocaleString()} />
                         <Metric label="임베딩 토큰" value={response.embeddingTokens.toLocaleString()} />
