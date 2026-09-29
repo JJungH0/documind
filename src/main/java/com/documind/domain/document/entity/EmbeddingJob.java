@@ -1,5 +1,6 @@
 package com.documind.domain.document.entity;
 
+import com.documind.domain.document.entity.enums.ChunkStrategy;
 import com.documind.domain.document.entity.enums.JobStatus;
 import com.documind.domain.document.entity.enums.ProcessingMode;
 import jakarta.persistence.*;
@@ -34,6 +35,10 @@ public class EmbeddingJob {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    private ChunkStrategy chunkStrategy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private ProcessingMode processingMode;
 
     @Enumerated(EnumType.STRING)
@@ -64,11 +69,13 @@ public class EmbeddingJob {
             Document document,
             int chunkSize,
             int chunkOverlap,
+            ChunkStrategy chunkStrategy,
             ProcessingMode processingMode) {
 
         this.document = document;
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
+        this.chunkStrategy = chunkStrategy;
         this.processingMode = processingMode;
         this.status = JobStatus.PENDING;
         this.totalChunks = 0;

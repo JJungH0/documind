@@ -8,6 +8,7 @@ import com.documind.domain.document.embedding.ChunkEmbedder;
 import com.documind.domain.document.entity.Document;
 import com.documind.domain.document.entity.DocumentChunk;
 import com.documind.domain.document.entity.EmbeddingJob;
+import com.documind.domain.document.entity.enums.ChunkStrategy;
 import com.documind.domain.document.entity.enums.JobStatus;
 import com.documind.domain.document.entity.enums.ProcessingMode;
 import com.documind.domain.document.repository.ChunkContent;
@@ -82,10 +83,13 @@ public class EmbeddingJobService {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCUMENT_NOT_FOUND, "ID: " + documentId));
 
+        ChunkStrategy strategy = req.strategyOrDefault();
+
         EmbeddingJob job = EmbeddingJob.builder()
                 .document(document)
                 .chunkSize(req.chunkSize())
                 .chunkOverlap(req.chunkOverlap())
+                .chunkStrategy(strategy)
                 .processingMode(ProcessingMode.SYNC)
                 .build();
 
@@ -93,11 +97,11 @@ public class EmbeddingJobService {
 
         job.start();
 
-        List<ChunkDraft> drafts = textChunker.chunk(
-                document.getExtractedText(),
-                req.chunkSize(),
-                req.chunkOverlap()
-        );
+        String text = document.getExtractedText();
+        List<ChunkDraft> drafts = switch (strategy){
+            case FIXED -> textChunker.chunk(text, req.chunkSize(), req.chunkOverlap());
+            case ARTICLE -> textChunker.chunkByArticle(text, req.chunkSize(), req.chunkOverlap());
+        };
 
         List<DocumentChunk> chunks = drafts.stream()
                 .map(draft -> DocumentChunk.builder()
@@ -111,8 +115,8 @@ public class EmbeddingJobService {
         documentChunkRepository.saveAll(chunks);
         job.assignTotalChunks(chunks.size());
 
-        log.info("청킹 완료: jobId={}, documentId={}, chunkSize={}, overlap={}, chunks={}",
-                job.getId(), documentId, req.chunkSize(), req.chunkOverlap(), chunks.size());
+        log.info("청킹 완료: jobId={}, documentId={}, strategy={}, chunkSize={}, overlap={}, chunks={}",
+                job.getId(), documentId, strategy, req.chunkSize(), req.chunkOverlap(), chunks.size());
 
         return job.getId();
     }

@@ -1,6 +1,7 @@
 package com.documind.domain.document.dto;
 
 import com.documind.domain.document.entity.EmbeddingJob;
+import com.documind.domain.document.entity.enums.ChunkStrategy;
 import com.documind.domain.document.entity.enums.JobStatus;
 import com.documind.domain.document.entity.enums.ProcessingMode;
 
@@ -11,6 +12,7 @@ public record JobResponse (
         long documentId,
         int chunkSize,
         int chunkOverlap,
+        ChunkStrategy chunkStrategy,
         ProcessingMode processingMode,
         JobStatus status,
         int totalChunks,
@@ -26,6 +28,7 @@ public record JobResponse (
                 job.getDocument().getId(),
                 job.getChunkSize(),
                 job.getChunkOverlap(),
+                job.getChunkStrategy(),
                 job.getProcessingMode(),
                 job.getStatus(),
                 job.getTotalChunks(),
