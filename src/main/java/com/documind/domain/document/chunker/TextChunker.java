@@ -171,7 +171,7 @@ public class TextChunker {
         return new PageIndexedText(clean.toString(), pageStarts, pageNumbers);
     }
 
-    private void validate(int chunkSize, int overlap) {
+    public void validate(int chunkSize, int overlap) {
         if (chunkSize < MIN_CHUNK_SIZE || chunkSize > MAX_CHUNK_SIZE) {
             throw new BusinessException(ErrorCode.INVALID_CHUNK_OPTION,
                     "chunkSize는 " + MIN_CHUNK_SIZE + "~" + MAX_CHUNK_SIZE

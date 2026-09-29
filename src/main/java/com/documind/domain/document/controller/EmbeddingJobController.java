@@ -2,6 +2,7 @@ package com.documind.domain.document.controller;
 
 import com.documind.domain.document.dto.CreateJobRequest;
 import com.documind.domain.document.dto.JobResponse;
+import com.documind.domain.document.entity.enums.ProcessingMode;
 import com.documind.domain.document.service.EmbeddingJobService;
 import com.documind.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @Tag(name = "EmbeddingJob", description = "청킹·임베딩 처리 작업")
@@ -23,16 +25,21 @@ public class EmbeddingJobController {
     private final EmbeddingJobService embeddingJobService;
 
     @Operation(summary = "처리 작업 생성",
-            description = "지정한 청킹 파라미터로 문서를 청크로 분활하고 임베딩을 생성함. (동기 처리)")
+            description = "문서를 청크로 나누고 임베딩을 생성한다. 기본은 비동기(202, 처리 상태는 GET /api/jobs/{id}로 확인)," +
+                    "mode를 SYNC로 보내면 처리가 끝난 뒤 응답한다(201)")
     @PostMapping("/documents/{documentId}/jobs")
     public ResponseEntity<ApiResponse<JobResponse>> create(
             @PathVariable Long documentId,
             @Valid @RequestBody CreateJobRequest req){
 
-        JobResponse response = embeddingJobService.createAndProcess(documentId, req);
+        JobResponse response = embeddingJobService.create(documentId, req);
+
 
         return ResponseEntity
-                .status(HttpStatus.CREATED)
+                .status(response.processingMode() == ProcessingMode.ASYNC
+                        ? HttpStatus.ACCEPTED
+                        : HttpStatus.CREATED)
+                .location(URI.create("/api/jobs/" + response.id()))
                 .body(ApiResponse.success(response));
     }
 
