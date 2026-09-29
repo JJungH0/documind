@@ -32,6 +32,7 @@ export type JobResponse = {
     embeddedChunks: number;
     progressPercent: number;
     durationMs: number | null;
+    errorMessage: string | null;
     createdAt: string;
 };
 
@@ -71,9 +72,10 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    const isForm = init?.body instanceof FormData;
     const response = await fetch(path, {
         ...init,
-        headers: {"Content-Type": "application/json", ...init?.headers},
+        headers: isForm ? init?.headers : {"Content-Type": "application/json", ...init?.headers},
     });
 
     let body: ApiResponse<T> | null = null;
@@ -106,4 +108,28 @@ export function ask(jobId: number, question: string): Promise<AskResponse> {
         method: "POST",
         body: JSON.stringify({question}),
     });
+}
+
+export function uploadDocument(file: File): Promise<DocumentResponse> {
+    const form = new FormData();
+    form.append("file", file);
+    return request<DocumentResponse>("/api/documents", {method: "POST", body: form});
+}
+
+export function createJob(documentId: number): Promise<JobResponse> {
+    return request<JobResponse>(`/api/documents/${documentId}/jobs`, {
+        method: "POST",
+        body: JSON.stringify({chunkSize: 1000, chunkOverlap: 100}),
+    });
+}
+
+export function getJob(jobId: number): Promise<JobResponse> {
+    return request<JobResponse>(`/api/jobs/${jobId}`);
+}
+
+export function toErrorMessage(e: unknown): string {
+    if (e instanceof ApiError && !e.code.startsWith("HTTP_")) {
+        return `[${e.code} ${e.message}`;
+    }
+    return "서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인하세요.";
 }
