@@ -20,6 +20,7 @@ import com.documind.global.exception.BusinessException;
 import com.documind.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -34,33 +35,27 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EmbeddingJobService {
 
+    private static final String QUEUE_FULL_MESSAGE = "처리 대기열이 가득 차 작업을 시작하지 못했습니다.";
+
     private final DocumentRepository documentRepository;
     private final EmbeddingJobRepository embeddingJobRepository;
-    private final DocumentChunkRepository documentChunkRepository;
     private final TextChunker textChunker;
-    private final ChunkEmbedder chunkEmbedder;
-    private final EmbeddingProperties embeddingProperties;
+    private final EmbeddingJobProcessor embeddingJobProcessor;
     private final TransactionTemplate transactionTemplate;
 
-    public JobResponse createAndProcess(Long documentId, CreateJobRequest req) {
-        Long jobId = transactionTemplate.execute(status -> createAndChunk(documentId, req));
+    public JobResponse create(Long documentId, CreateJobRequest req) {
+        textChunker.validate(req.chunkSize(), req.chunkOverlap());
+        ProcessingMode mode = req.modeOrDefault();
 
-        try {
-            embedChunks(jobId);
-        } catch (RuntimeException e) {
-            transactionTemplate.executeWithoutResult(status -> findJob(jobId).markFailed(e.getMessage()));
-            throw (e instanceof BusinessException be)
-                    ? be
-                    : new BusinessException(ErrorCode.EMBEDDING_FAILED, e);
+        Long jobId = transactionTemplate.execute(status -> createPending(documentId, req, mode));
+
+        if (mode == ProcessingMode.SYNC) {
+            embeddingJobProcessor.process(jobId);
+        } else {
+            submit(jobId);
         }
-        return transactionTemplate.execute(status -> {
-            EmbeddingJob job = findJob(jobId);
-            job.markCompleted();
-            log.info("임베딩 완료: jobId={}, chunks={}, tokens={}, durationMs={}",
-                    job.getId(), job.getTotalChunks(),
-                    job.getEmbeddingTokens(), job.getDurationMs());
-            return JobResponse.from(job);
-        });
+
+        return transactionTemplate.execute(status -> JobResponse.from(findJob(jobId)));
     }
 
     @Transactional(readOnly = true)
@@ -79,76 +74,29 @@ public class EmbeddingJobService {
                 .toList();
     }
 
-    private Long createAndChunk(Long documentId, CreateJobRequest req) {
+    private Long createPending(Long documentId, CreateJobRequest req, ProcessingMode mode) {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCUMENT_NOT_FOUND, "ID: " + documentId));
-
-        ChunkStrategy strategy = req.strategyOrDefault();
 
         EmbeddingJob job = EmbeddingJob.builder()
                 .document(document)
                 .chunkSize(req.chunkSize())
                 .chunkOverlap(req.chunkOverlap())
-                .chunkStrategy(strategy)
-                .processingMode(ProcessingMode.SYNC)
+                .chunkStrategy(req.strategyOrDefault())
+                .processingMode(mode)
                 .build();
 
         embeddingJobRepository.save(job);
-
-        job.start();
-
-        String text = document.getExtractedText();
-        List<ChunkDraft> drafts = switch (strategy){
-            case FIXED -> textChunker.chunk(text, req.chunkSize(), req.chunkOverlap());
-            case ARTICLE -> textChunker.chunkByArticle(text, req.chunkSize(), req.chunkOverlap());
-        };
-
-        List<DocumentChunk> chunks = drafts.stream()
-                .map(draft -> DocumentChunk.builder()
-                        .job(job)
-                        .chunkIndex(draft.index())
-                        .content(draft.content())
-                        .pageNumber(draft.pageNumber())
-                        .build())
-                .toList();
-
-        documentChunkRepository.saveAll(chunks);
-        job.assignTotalChunks(chunks.size());
-
-        log.info("청킹 완료: jobId={}, documentId={}, strategy={}, chunkSize={}, overlap={}, chunks={}",
-                job.getId(), documentId, strategy, req.chunkSize(), req.chunkOverlap(), chunks.size());
-
         return job.getId();
     }
 
-    private void saveBatch(Long jobId, List<ChunkContent> batch, ChunkEmbedder.EmbeddingResult result) {
-        Map<Long, DocumentChunk> chunksById = documentChunkRepository.findAllById(batch.stream().map(ChunkContent::id).toList())
-                .stream().collect(Collectors.toMap(DocumentChunk::getId, Function.identity()));
-
-        for (int i = 0; i < batch.size(); i++) {
-            Long chunkId = batch.get(i).id();
-            chunksById.get(chunkId).applyEmbedding(result.vectors().get(i));
-        }
-
-        findJob(jobId).addProgress(batch.size(), result.totalTokens());
-    }
-
-    private void embedChunks(Long jobId) {
-        List<ChunkContent> contents = transactionTemplate.execute(status -> {
-            findJob(jobId).changeStatus(JobStatus.EMBEDDING);
-            return documentChunkRepository.findContentsByJobId(jobId);
-        });
-
-        int batchSize = embeddingProperties.batchSize();
-
-        for (int from = 0; from < contents.size(); from += batchSize) {
-            int to = Math.min(from + batchSize, contents.size());
-            List<ChunkContent> batch = contents.subList(from, to);
-            List<String> texts = batch.stream().map(ChunkContent::content).toList();
-
-            ChunkEmbedder.EmbeddingResult result = chunkEmbedder.embed(texts);
-
-            transactionTemplate.executeWithoutResult(status -> saveBatch(jobId, batch, result));
+    private void submit(Long jobId) {
+        try {
+            embeddingJobProcessor.processAsync(jobId);
+        } catch (TaskRejectedException e) {
+            transactionTemplate.executeWithoutResult(status -> findJob(jobId).markFailed(QUEUE_FULL_MESSAGE));
+            log.warn("대기열 가득 참으로 작업 거절: jobId={}", jobId);
+            throw new BusinessException(ErrorCode.JOB_QUEUE_FULL, e);
         }
     }
 

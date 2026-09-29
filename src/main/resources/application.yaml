@@ -61,6 +61,8 @@ documind:
     location: ./storage/documents
   embedding:
     batch-size: 100
+    worker-count: 2
+    queue-capacity: 20
   rag:
     candidate-count: 20
     context-char-limit: 2000

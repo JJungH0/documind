@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import AssistantMessage from "@/components/assistant-message";
+import UploadPanel from "@/components/upload-panel";
 import {
-    ApiError,
     ask,
     getDocuments,
     getJobs,
+    toErrorMessage,
     type AskResponse,
     type DocumentResponse,
     type JobResponse,
@@ -37,7 +38,7 @@ export default function ChatScreen() {
                 if (!ignore) setDocuments(docs);
             })
             .catch((e) => {
-                if (!ignore) setLoadError(toMessage(e));
+                if (!ignore) setLoadError(toErrorMessage(e));
             });
         return () => {
             ignore = true;
@@ -71,12 +72,28 @@ export default function ChatScreen() {
                 setJobs(list);
                 setJobId(list.find((job) => job.status === "COMPLETED")?.id ?? null);
             })
-            .catch((e) => setLoadError(toMessage(e)));
+            .catch((e) => setLoadError(toErrorMessage(e)));
     }
 
     function handleJobChange(value: string) {
         setJobId(value ? Number(value) : null);
         resetConversation();
+    }
+
+    function refreshDocuments() {
+        getDocuments()
+            .then(setDocuments)
+            .catch((e) => setLoadError(toErrorMessage(e)));
+    }
+
+    function openJob(job: JobResponse) {
+        setDocumentId(job.documentId);
+        setJobId(job.id);
+        setLoadError(null);
+        resetConversation();
+        getJobs(job.documentId)
+            .then(setJobs)
+            .catch((e) => setLoadError(toErrorMessage(e)));
     }
 
     async function send() {
@@ -90,7 +107,7 @@ export default function ChatScreen() {
             const response = await ask(jobId, question);
             setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "assistant", response }]);
         } catch (e) {
-            setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "error", text: toMessage(e) }]);
+            setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "error", text: toErrorMessage(e) }]);
         } finally {
             setLoading(false);
         }
@@ -154,6 +171,10 @@ export default function ChatScreen() {
                         {loadError}
                     </p>
                 )}
+
+                <div className="md:mt-auto">
+                    <UploadPanel onUploaded={refreshDocuments} onOpen={openJob} />
+                </div>
             </aside>
 
             <main className="flex min-h-0 flex-1 flex-col">
@@ -244,14 +265,4 @@ function jobLabel(job: JobResponse): string {
             ? `#${job.id}  조항 단위, 최대 ${job.chunkSize}자`
             : `#${job.id}  청크 ${job.chunkSize}자, 겹침 ${job.chunkOverlap}자`;
     return job.status === "COMPLETED" ? base : `${base} (${job.status})`;
-}
-
-function toMessage(e: unknown): string {
-    if (e instanceof ApiError) {
-        if (e.code.startsWith("HTTP_")) {
-            return "서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인하세요.";
-        }
-        return `[${e.code}] ${e.message}`;
-    }
-    return "서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인하세요.";
 }

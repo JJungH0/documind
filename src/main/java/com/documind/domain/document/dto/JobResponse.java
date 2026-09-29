@@ -19,6 +19,7 @@ public record JobResponse (
         int embeddedChunks,
         int progressPercent,
         Long durationMs,
+        String errorMessage,
         Instant createdAt
 ){
 
@@ -35,6 +36,7 @@ public record JobResponse (
                 job.getEmbeddedChunks(),
                 job.progressPercent(),
                 job.getDurationMs(),
+                job.getErrorMessage(),
                 job.getCreatedAt()
         );
     }
