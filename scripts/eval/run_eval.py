@@ -19,7 +19,8 @@ WARMUP_QUESTION = "이 문서는 어떤 문서야?"
 
 CSV_FIELDS = [
     "run", "id", "type", "question", "verdict", "answer",
-    "top_similarity", "embedding_tokens", "prompt_tokens", "completion_tokens",
+    "top_similarity", "source_count", "context_chars",
+    "embedding_tokens", "prompt_tokens", "completion_tokens",
     "embedding_ms", "search_ms", "generation_ms", "total_ms", "error",
 ]
 
@@ -71,6 +72,8 @@ def to_row(run, item, data, error):
         verdict=judge(item, data),
         answer=data["answer"],
         top_similarity=round(sources[0]["similarity"], 4) if sources else "",
+        source_count=len(sources),
+        context_chars=data["contextChars"],
         embedding_tokens=data["embeddingTokens"],
         prompt_tokens=data["promptTokens"],
         completion_tokens=data["completionTokens"],
@@ -106,6 +109,10 @@ def print_summary(rows):
     for key in ["embedding_ms", "search_ms", "generation_ms", "total_ms"]:
         print(f"{key:<15}{statistics.median([r[key] for r in ok]):.1f}")
 
+    print("\n=== 보낸 발췌 중앙값 ===")
+    print(f"{'source_count':<15}{statistics.median([r['source_count'] for r in ok]):.1f}")
+    print(f"{'context_chars':<15}{statistics.median([r['context_chars'] for r in ok]):.1f}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="DocuMind RAG 평가")
@@ -114,6 +121,7 @@ def main():
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--base-url", default="http://localhost:8080")
     parser.add_argument("--no-warmup", action="store_true")
+    parser.add_argument("--tag", default="")
     args = parser.parse_args()
 
     items = json.loads(Path(args.questions).read_text(encoding="utf-8"))
@@ -132,7 +140,8 @@ def main():
 
     out_dir = Path(__file__).parent / "results"
     out_dir.mkdir(exist_ok=True)
-    out_path = out_dir / f"{datetime.now():%Y%m%d-%H%M%S}_job{args.job_id}.csv"
+    suffix = f"_{args.tag}" if args.tag else ""
+    out_path = out_dir / f"{datetime.now():%Y%m%d-%H%M%S}_job{args.job_id}{suffix}.csv"
     with out_path.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
         writer.writeheader()

@@ -239,7 +239,10 @@ function EmptyState({ filename, ready }: { filename?: string; ready: boolean }) 
 }
 
 function jobLabel(job: JobResponse): string {
-    const base = `#${job.id}  청크 ${job.chunkSize}자, 겹침 ${job.chunkOverlap}자`;
+    const base =
+        job.chunkStrategy === "ARTICLE"
+            ? `#${job.id}  조항 단위, 최대 ${job.chunkSize}자`
+            : `#${job.id}  청크 ${job.chunkSize}자, 겹침 ${job.chunkOverlap}자`;
     return job.status === "COMPLETED" ? base : `${base} (${job.status})`;
 }
 
