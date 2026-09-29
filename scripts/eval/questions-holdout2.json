@@ -1,0 +1,8 @@
+[
+  {"id": 15, "type": "검증2_표현바꿈", "question": "해외 출장 가면 하루에 얼마씩 줘?", "answerable": true, "expected": [["60"]]},
+  {"id": 16, "type": "검증2_표현바꿈", "question": "집에서 일할 때 모니터 빌려줘?", "answerable": true, "expected": [["모니터"]]},
+  {"id": 17, "type": "검증2_표현바꿈", "question": "코드 리뷰 부탁받으면 언제까지 봐줘야 돼?", "answerable": true, "expected": [["1영업일"]]},
+  {"id": 18, "type": "검증2_표현바꿈", "question": "5년 넘게 다니면 쉬는 날 더 줘?", "answerable": true, "expected": [["10일", "리프레시"]]},
+  {"id": 19, "type": "검증2_표현바꿈", "question": "금요일 저녁에 서비스 배포해도 돼?", "answerable": true, "expected": [["4시", "16시"]]},
+  {"id": 20, "type": "검증2_문서에없음", "question": "회사 동호회 활동비 지원돼?", "answerable": false, "expected": []}
+]
