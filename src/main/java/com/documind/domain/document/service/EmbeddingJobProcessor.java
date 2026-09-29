@@ -58,10 +58,11 @@ public class EmbeddingJobProcessor {
                         job.getId(), job.getProcessingMode(), job.getTotalChunks(), job.getEmbeddingTokens(), job.getDurationMs());
             });
         } catch (RuntimeException e) {
-            transactionTemplate.executeWithoutResult(status -> findJob(jobId).markFailed(e.getMessage()));
-            throw (e instanceof BusinessException be)
+            BusinessException failure = (e instanceof BusinessException be)
                     ? be
                     : new BusinessException(ErrorCode.EMBEDDING_FAILED, e);
+            transactionTemplate.executeWithoutResult(status -> findJob(jobId).markFailed(failure.getMessage()));
+            throw failure;
         }
     }
 
