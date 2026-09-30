@@ -58,6 +58,9 @@ public class EmbeddingJob {
     private Instant completedAt;
     private Long durationMs;
 
+    @Column(length = 10)
+    private String errorCode;
+
     @Column(columnDefinition = "TEXT")
     private String errorMessage;
 
@@ -112,12 +115,13 @@ public class EmbeddingJob {
         this.durationMs = Duration.between(startedAt, completedAt).toMillis();
     }
 
-    public void markFailed(String errorMessage) {
+    public void markFailed(String errorCode, String errorMessage) {
         this.status = JobStatus.FAILED;
         this.completedAt = Instant.now();
         this.durationMs = Objects.nonNull(startedAt)
                 ? Duration.between(startedAt, completedAt).toMillis()
                 : null;
+        this.errorCode = errorCode;
         this.errorMessage = errorMessage;
     }
 
@@ -126,5 +130,13 @@ public class EmbeddingJob {
             return 0;
         }
         return (int) ((embeddedChunks * 100L) / totalChunks);
+    }
+
+    public void prepareRetry() {
+        this.status = JobStatus.PENDING;
+        this.errorCode = null;
+        this.errorMessage = null;
+        this.completedAt = null;
+        this.durationMs = null;
     }
 }

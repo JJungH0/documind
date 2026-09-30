@@ -56,4 +56,11 @@ public class EmbeddingJobController {
     public ApiResponse<List<JobResponse>> listByDocument(@PathVariable Long documentId) {
         return ApiResponse.success(embeddingJobService.getJobsByDocument(documentId));
     }
+
+    @Operation(summary = "처리 작업 다시 시도",
+    description = "요청 한도 초과, 일시 오류, 서버 중단으로 실패한 작업을 백터가 없는 청크부터 이어서 처리함.")
+    @PostMapping("/jobs/{jobId}/retry")
+    public ResponseEntity<ApiResponse<JobResponse>> retry(@PathVariable Long jobId) {
+        return ResponseEntity.accepted().body(ApiResponse.success(embeddingJobService.retry(jobId)));
+    }
 }

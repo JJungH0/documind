@@ -10,6 +10,7 @@ import com.documind.domain.query.entity.QueryLog;
 import com.documind.domain.query.entity.enums.AnswerStatus;
 import com.documind.domain.query.repository.QueryLogRepository;
 import com.documind.global.config.RagProperties;
+import com.documind.global.exception.AiErrorClassifier;
 import com.documind.global.exception.BusinessException;
 import com.documind.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +85,7 @@ public class QueryService {
         try {
             resp = chatModel.call(prompt);
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.ANSWER_GENERATION_FAILED, e);
+            throw AiErrorClassifier.classify(e, ErrorCode.ANSWER_GENERATION_FAILED);
         }
 
         double generationMs = toMillis(start, System.nanoTime());

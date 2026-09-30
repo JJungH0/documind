@@ -4,6 +4,7 @@ import com.documind.domain.document.entity.EmbeddingJob;
 import com.documind.domain.document.entity.enums.ChunkStrategy;
 import com.documind.domain.document.entity.enums.JobStatus;
 import com.documind.domain.document.entity.enums.ProcessingMode;
+import com.documind.global.exception.AiErrorClassifier;
 
 import java.time.Instant;
 
@@ -19,7 +20,9 @@ public record JobResponse (
         int embeddedChunks,
         int progressPercent,
         Long durationMs,
+        String errorCode,
         String errorMessage,
+        boolean retryable,
         Instant createdAt
 ){
 
@@ -36,7 +39,9 @@ public record JobResponse (
                 job.getEmbeddedChunks(),
                 job.progressPercent(),
                 job.getDurationMs(),
+                job.getErrorCode(),
                 job.getErrorMessage(),
+                job.getStatus() == JobStatus.FAILED && AiErrorClassifier.isRetryable(job.getErrorCode()),
                 job.getCreatedAt()
         );
     }
