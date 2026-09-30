@@ -21,8 +21,9 @@ public final class AiErrorClassifier {
         return new BusinessException(errorCodeOf(e, fallback), e);
     }
 
-    public static boolean isRetryable(ErrorCode code) {
-        return RETRYABLE.contains(code);
+    public static boolean isRetryable(String code) {
+        return code != null && RETRYABLE.stream()
+                .anyMatch(c -> c.getCode().equals(code));
     }
 
     static ErrorCode errorCodeOf(Throwable e, ErrorCode fallback) {

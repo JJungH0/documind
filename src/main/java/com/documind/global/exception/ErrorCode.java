@@ -33,6 +33,7 @@ public enum ErrorCode {
     JOB_NOT_READY(HttpStatus.CONFLICT, "D013", "임베딩이 완료되지 않은 작업입니다."),
     JOB_QUEUE_FULL(HttpStatus.SERVICE_UNAVAILABLE, "D014", "처리 대기 중인 작업이 많아 지금은 받을 수 없습니다. 잠시 후 다시 시도해 주세요."),
     JOB_INTERRUPTED(HttpStatus.INTERNAL_SERVER_ERROR, "D015", "서버가 처리 도중 종료되어 작업이 중단되었습니다."),
+    JOB_NOT_RETRYABLE(HttpStatus.CONFLICT, "D016", "다시 처리할 수 없는 작업입니다."),
 
     /**
      * OpenAI :

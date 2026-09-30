@@ -131,4 +131,12 @@ public class EmbeddingJob {
         }
         return (int) ((embeddedChunks * 100L) / totalChunks);
     }
+
+    public void prepareRetry() {
+        this.status = JobStatus.PENDING;
+        this.errorCode = null;
+        this.errorMessage = null;
+        this.completedAt = null;
+        this.durationMs = null;
+    }
 }

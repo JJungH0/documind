@@ -13,7 +13,8 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
         select new com.documind.domain.document.repository.ChunkContent(c.id, c.content)
         from DocumentChunk c
         where c.job.id = :jobId
+         and c.embedding is null
         order by c.chunkIndex
         """)
-    List<ChunkContent> findContentsByJobId(@Param("jobId") Long jobId);
+    List<ChunkContent> findUnembeddedContentsByJobId(@Param("jobId") Long jobId);
 }
