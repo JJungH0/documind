@@ -8,7 +8,7 @@ import {
     uploadDocument,
     type DocumentResponse,
     type JobResponse,
-    type JobStatus,
+    type JobStatus, retryJob,
 } from "@/lib/api";
 
 const POLL_INTERVAL_MS = 1000;
@@ -71,6 +71,15 @@ export default function UploadPanel({ onUploaded, onOpen }: Props) {
         }
     }
 
+    async function handleRetry(target: JobResponse) {
+        setError(null);
+        try {
+            setJob(await retryJob(target.id));
+        } catch (e){
+            setError(toErrorMessage(e));
+        }
+    }
+
     const busy = uploading || (job !== null && !FINISHED.includes(job.status));
 
     return (
@@ -101,7 +110,7 @@ export default function UploadPanel({ onUploaded, onOpen }: Props) {
                         {fileName}
                     </p>
                     {uploading && <p className="text-muted">올리는 중</p>}
-                    {job && <JobProgress job={job} onOpen={onOpen} />}
+                    {job && <JobProgress job={job} onOpen={onOpen} onRetry={handleRetry} />}
                 </div>
             )}
 
@@ -114,7 +123,15 @@ export default function UploadPanel({ onUploaded, onOpen }: Props) {
     );
 }
 
-function JobProgress({ job, onOpen }: { job: JobResponse; onOpen: (job: JobResponse) => void }) {
+function JobProgress({
+                         job,
+                         onOpen,
+                         onRetry,
+                     }: {
+    job: JobResponse;
+    onOpen: (job: JobResponse) => void;
+    onRetry: (job: JobResponse) => void;
+}) {
     const failed = job.status === "FAILED";
 
     return (
@@ -149,6 +166,16 @@ function JobProgress({ job, onOpen }: { job: JobResponse; onOpen: (job: JobRespo
                     {job.errorCode && `[${job.errorCode}] `}
                     {job.errorMessage}
                 </p>
+            )}
+
+            {failed && job.retryable && (
+                <button
+                    type="button"
+                    onClick={() => onRetry(job)}
+                    className="self-start text-petrol underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-petrol"
+                >
+                    이어서 처리하기
+                </button>
             )}
 
             {job.status === "COMPLETED" && (

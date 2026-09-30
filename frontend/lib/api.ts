@@ -34,6 +34,7 @@ export type JobResponse = {
     durationMs: number | null;
     errorCode: string | null;
     errorMessage: string | null;
+    retryable: boolean;
     createdAt: string;
 };
 
@@ -133,4 +134,8 @@ export function toErrorMessage(e: unknown): string {
         return `[${e.code} ${e.message}`;
     }
     return "서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인하세요.";
+}
+
+export function retryJob(jobId: number): Promise<JobResponse> {
+    return request<JobResponse>(`/api/jobs/${jobId}/retry`, {method: "POST"});
 }
