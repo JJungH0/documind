@@ -1,6 +1,7 @@
 package com.documind.domain.document.embedding;
 
 import com.documind.domain.document.entity.DocumentChunk;
+import com.documind.global.exception.AiErrorClassifier;
 import com.documind.global.exception.BusinessException;
 import com.documind.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,12 @@ public class ChunkEmbedder {
     private final EmbeddingModel embeddingModel;
 
     public EmbeddingResult embed(List<String> texts) {
-        EmbeddingResponse response = embeddingModel.embedForResponse(texts);
+        EmbeddingResponse response;
+        try {
+            response = embeddingModel.embedForResponse(texts);
+        } catch (RuntimeException e) {
+            throw AiErrorClassifier.classify(e, ErrorCode.EMBEDDING_FAILED);
+        }
 
         float[][] vectors = new float[texts.size()][];
         for (Embedding embedding : response.getResults()) {

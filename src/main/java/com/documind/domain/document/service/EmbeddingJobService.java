@@ -94,7 +94,7 @@ public class EmbeddingJobService {
         try {
             embeddingJobProcessor.processAsync(jobId);
         } catch (TaskRejectedException e) {
-            transactionTemplate.executeWithoutResult(status -> findJob(jobId).markFailed(QUEUE_FULL_MESSAGE));
+            transactionTemplate.executeWithoutResult(status -> findJob(jobId).markFailed(ErrorCode.JOB_QUEUE_FULL.getCode(), QUEUE_FULL_MESSAGE));
             log.warn("대기열 가득 참으로 작업 거절: jobId={}", jobId);
             throw new BusinessException(ErrorCode.JOB_QUEUE_FULL, e);
         }

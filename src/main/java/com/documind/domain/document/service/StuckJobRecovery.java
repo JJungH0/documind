@@ -3,6 +3,7 @@ package com.documind.domain.document.service;
 import com.documind.domain.document.entity.EmbeddingJob;
 import com.documind.domain.document.entity.enums.JobStatus;
 import com.documind.domain.document.repository.EmbeddingJobRepository;
+import com.documind.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -31,7 +32,7 @@ public class StuckJobRecovery {
         if (stuck.isEmpty()) {
             return;
         }
-        stuck.forEach(job -> job.markFailed(INTERRUPTED_MESSAGE));
+        stuck.forEach(job -> job.markFailed(ErrorCode.JOB_INTERRUPTED.getCode(), INTERRUPTED_MESSAGE));
         log.warn("중단된 작업 {}건을 FAILED로 변경: jobIds={}",
                 stuck.size(), stuck.stream().map(EmbeddingJob::getId).toList());
     }

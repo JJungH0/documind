@@ -12,6 +12,7 @@ import com.documind.domain.document.repository.DocumentRepository;
 import com.documind.domain.document.repository.EmbeddingJobRepository;
 import com.documind.global.config.AsyncConfig;
 import com.documind.global.config.EmbeddingProperties;
+import com.documind.global.exception.AiErrorClassifier;
 import com.documind.global.exception.BusinessException;
 import com.documind.global.exception.ErrorCode;
 import lombok.AllArgsConstructor;
@@ -42,6 +43,13 @@ public class EmbeddingJobProcessor {
     public void processAsync(Long jobId) {
         try {
             process(jobId);
+        } catch (BusinessException e) {
+            if (e.getErrorCode().getCode().startsWith("A")) {
+                log.warn("비동기 처리 실패: jobId={}, code={}, cause={}",
+                        jobId, e.getErrorCode().getCode(), e.getCause() != null ? e.getCause().getMessage() : null);
+            } else {
+                log.error("비동기 처리 실패: jobId={}", jobId, e);
+            }
         } catch (RuntimeException e) {
             log.error("비동기 처리 실패: jobId={}", jobId, e);
         }
@@ -60,8 +68,8 @@ public class EmbeddingJobProcessor {
         } catch (RuntimeException e) {
             BusinessException failure = (e instanceof BusinessException be)
                     ? be
-                    : new BusinessException(ErrorCode.EMBEDDING_FAILED, e);
-            transactionTemplate.executeWithoutResult(status -> findJob(jobId).markFailed(failure.getMessage()));
+                    : AiErrorClassifier.classify(e, ErrorCode.EMBEDDING_FAILED);
+            transactionTemplate.executeWithoutResult(status -> findJob(jobId).markFailed(failure.getErrorCode().getCode(),failure.getMessage()));
             throw failure;
         }
     }

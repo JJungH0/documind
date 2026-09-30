@@ -32,6 +32,16 @@ public enum ErrorCode {
     EMBEDDING_FAILED(HttpStatus.BAD_GATEWAY, "D012", "임베딩 생성에 실패했습니다."),
     JOB_NOT_READY(HttpStatus.CONFLICT, "D013", "임베딩이 완료되지 않은 작업입니다."),
     JOB_QUEUE_FULL(HttpStatus.SERVICE_UNAVAILABLE, "D014", "처리 대기 중인 작업이 많아 지금은 받을 수 없습니다. 잠시 후 다시 시도해 주세요."),
+    JOB_INTERRUPTED(HttpStatus.INTERNAL_SERVER_ERROR, "D015", "서버가 처리 도중 종료되어 작업이 중단되었습니다."),
+
+    /**
+     * OpenAI :
+     */
+    AI_AUTH_FAILED(HttpStatus.BAD_GATEWAY, "A001", "AI 서비스 인증에 실패했습니다. 관리자에게 API 키 설정 확인을 요청하세요."),
+    AI_QUOTA_EXCEEDED(HttpStatus.BAD_GATEWAY, "A002", "AI 서비스 사용 가능 금액이 소진되었습니다. 관리자에게 문의하세요."),
+    AI_RATE_LIMITED(HttpStatus.SERVICE_UNAVAILABLE, "A003", "AI 서비스 요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요."),
+    AI_UNAVAILABLE(HttpStatus.BAD_GATEWAY, "A004", "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요."),
+
 
     /**
      * 질의 :
