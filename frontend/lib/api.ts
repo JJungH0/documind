@@ -32,6 +32,7 @@ export type JobResponse = {
     embeddedChunks: number;
     progressPercent: number;
     durationMs: number | null;
+    errorCode: string | null;
     errorMessage: string | null;
     createdAt: string;
 };

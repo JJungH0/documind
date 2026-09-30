@@ -144,7 +144,12 @@ function JobProgress({ job, onOpen }: { job: JobResponse; onOpen: (job: JobRespo
                 </p>
             )}
 
-            {failed && job.errorMessage && <p className="text-danger">{job.errorMessage}</p>}
+            {failed && job.errorMessage && (
+                <p className="text-danger">
+                    {job.errorCode && `[${job.errorCode}] `}
+                    {job.errorMessage}
+                </p>
+            )}
 
             {job.status === "COMPLETED" && (
                 <button

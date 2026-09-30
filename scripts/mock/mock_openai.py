@@ -110,8 +110,15 @@ def main():
     parser.add_argument("--status", type=int, default=429, help="실패 시 돌려줄 HTTP 상태")
     parser.add_argument("--fail-count", type=int, default=-1, help="처음 몇 번 실패할지 (-1이면 항상 실패)")
     parser.add_argument("--retry-after", type=int, default=None, help="429 응답에 넣을 Retry-After(초)")
+    parser.add_argument("--quota", action="store_true", help="429를 잔액 부족(insufficient_quota)으로 응답")
     args = parser.parse_args()
 
+    if args.quota:
+        ERROR_BODIES[429] = {
+            "message": "You exceeded your current quota, please check your plan and billing details.",
+            "type": "insufficient_quota",
+            "code": "insufficient_quota",
+        }
     state = State(args.status, args.fail_count, args.retry_after)
     server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(state))
     mode = "항상" if args.fail_count < 0 else f"처음 {args.fail_count}번"
