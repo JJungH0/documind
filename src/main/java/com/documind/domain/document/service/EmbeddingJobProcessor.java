@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -149,10 +150,42 @@ public class EmbeddingJobProcessor {
             List<ChunkContent> batch = contents.subList(from, to);
             List<String> texts = batch.stream().map(ChunkContent::content).toList();
 
-            ChunkEmbedder.EmbeddingResult result = chunkEmbedder.embed(texts);
+            ChunkEmbedder.EmbeddingResult result = embedWithRetry(jobId, texts);
 
             transactionTemplate.executeWithoutResult(status -> saveBatch(jobId, batch, result));
         }
+    }
+
+    private ChunkEmbedder.EmbeddingResult embedWithRetry(Long jobId, List<String> texts) {
+        int maxAttempts = embeddingProperties.retryMaxAttempts();
+        Duration wait = embeddingProperties.retryInitialWait();
+
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return chunkEmbedder.embed(texts);
+            } catch (BusinessException e) {
+                if (attempt >= maxAttempts || !AiErrorClassifier.isRetryable(e.getErrorCode().getCode())) {
+                    throw e;
+                }
+                log.warn("배치 재시도 대기: jobId={}, code={}, attempt={}/{}, wait={}s",
+                        jobId, e.getErrorCode().getCode(), attempt, maxAttempts, wait.toSeconds());
+                sleep(wait);
+                wait = min(wait.multipliedBy(2), embeddingProperties.retryMaxWait());
+            }
+        }
+    }
+
+    private static void sleep(Duration duration) {
+        try {
+            Thread.sleep(duration);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(ErrorCode.JOB_INTERRUPTED, e);
+        }
+    }
+
+    private static Duration min(Duration a, Duration b) {
+        return a.compareTo(b) <= 0 ? a : b;
     }
 
     private EmbeddingJob findJob(Long jobId) {
