@@ -24,8 +24,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -144,15 +146,31 @@ public class EmbeddingJobProcessor {
         });
 
         int batchSize = embeddingProperties.batchSize();
+        List<List<ChunkContent>> batches = new ArrayList<>();
 
         for (int from = 0; from < contents.size(); from += batchSize) {
-            int to = Math.min(from + batchSize, contents.size());
-            List<ChunkContent> batch = contents.subList(from, to);
-            List<String> texts = batch.stream().map(ChunkContent::content).toList();
+            batches.add(contents.subList(from, Math.min(from + batchSize, contents.size())));
+        }
 
-            ChunkEmbedder.EmbeddingResult result = embedWithRetry(jobId, texts);
+        ThreadFactory threads = Thread.ofPlatform().name("embed-call-" + jobId + "-", 1).factory();
+        ExecutorService pool = Executors.newFixedThreadPool(embeddingProperties.concurrency(), threads);
+        try {
+            ExecutorCompletionService<BatchResult> done = new ExecutorCompletionService<>(pool);
+            for (List<ChunkContent> batch : batches) {
+                List<String> texts = batch.stream()
+                        .map(ChunkContent::content)
+                        .toList();
+                done.submit(() -> new BatchResult(batch, embedWithRetry(jobId, texts)));
+            }
+            for (int i = 0; i < batches.size(); i++) {
+                BatchResult finished = takeNext(done);
+                transactionTemplate.executeWithoutResult(
+                        status -> saveBatch(jobId, finished.batch(), finished.result())
+                );
+            }
+        } finally {
 
-            transactionTemplate.executeWithoutResult(status -> saveBatch(jobId, batch, result));
+            pool.shutdown();
         }
     }
 
@@ -192,4 +210,21 @@ public class EmbeddingJobProcessor {
         return embeddingJobRepository.findById(jobId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.JOB_NOT_FOUND, "ID: " + jobId));
     }
+
+    private static BatchResult takeNext(CompletionService<BatchResult> done) {
+        try {
+            return done.take().get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(ErrorCode.JOB_INTERRUPTED, e);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException cause) {
+                throw cause;
+            }
+            throw new BusinessException(ErrorCode.EMBEDDING_FAILED, e.getCause());
+        }
+    }
+
+
+    private record BatchResult(List<ChunkContent> batch, ChunkEmbedder.EmbeddingResult result) { }
 }

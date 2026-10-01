@@ -17,6 +17,10 @@ public record EmbeddingProperties(
 
         @Positive
         @Max(8)
+        int concurrency,
+
+        @Positive
+        @Max(8)
         int workerCount,
 
         @PositiveOrZero
