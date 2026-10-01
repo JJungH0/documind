@@ -61,6 +61,7 @@ documind:
     location: ./storage/documents
   embedding:
     batch-size: 100
+    concurrency: 4
     worker-count: 2
     queue-capacity: 20
     retry-max-attempts: 4
