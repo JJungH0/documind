@@ -63,6 +63,9 @@ documind:
     batch-size: 100
     worker-count: 2
     queue-capacity: 20
+    retry-max-attempts: 4
+    retry-initial-wait: 10s
+    retry-max-wait: 40s
   rag:
     candidate-count: 20
     context-char-limit: 2000
