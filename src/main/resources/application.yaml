@@ -20,11 +20,6 @@ spring:
         generate_statistics: true
     open-in-view: false
 
-  data:
-    redis:
-      host: localhost
-      port: 6381
-
   servlet:
     multipart:
       max-file-size: 50MB
