@@ -29,10 +29,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
 
-        if (errorCode.getStatus().is5xxServerError()) {
+        if (errorCode.getStatus().is5xxServerError() && !errorCode.isExpectedFailure()) {
             log.error("[{}] {}", errorCode.getCode(), e.getMessage(), e);
         } else {
-            log.warn("[{}] {}", errorCode.getCode(), e.getMessage());
+            log.warn("[{}] {}{}", errorCode.getCode(), e.getMessage(), causeOf(e));
         }
 
         return ResponseEntity
@@ -80,5 +80,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ErrorCode.INTERNAL_ERROR.getStatus())
                 .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR.getCode(), ErrorCode.INTERNAL_ERROR.getMessage()));
+    }
+
+    private static String causeOf(Throwable e) {
+        return e.getCause() == null ? "" : " (원인: " + e.getCause().getMessage() + ")";
     }
 }

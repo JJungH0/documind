@@ -87,7 +87,7 @@ public class EmbeddingJobProcessor {
         try {
             task.run();
         } catch (BusinessException e) {
-            if (e.getErrorCode().getCode().startsWith("A")) {
+            if (e.getErrorCode().isExpectedFailure()) {
                 log.warn("비동기 처리 실패: jobId={}, code={}, cause={}",
                         jobId, e.getErrorCode().getCode(),
                         e.getCause() != null ? e.getCause().getMessage() : null);
