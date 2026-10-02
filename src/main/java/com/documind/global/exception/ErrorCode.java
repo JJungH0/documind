@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
@@ -52,4 +55,15 @@ public enum ErrorCode {
     private final HttpStatus status;
     private final String code;
     private final String message;
+    private static final Set<ErrorCode> EXPECTED_FAILURES = EnumSet.of(
+            JOB_QUEUE_FULL,
+            AI_AUTH_FAILED,
+            AI_QUOTA_EXCEEDED,
+            AI_RATE_LIMITED,
+            AI_UNAVAILABLE
+    );
+
+    public boolean isExpectedFailure() {
+        return EXPECTED_FAILURES.contains(this);
+    }
     }
