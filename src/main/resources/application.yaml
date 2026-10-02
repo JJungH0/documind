@@ -7,6 +7,8 @@ spring:
     username: documind
     password: documind
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-init-sql: SET hnsw.iterative_scan = strict_order
 
   jpa:
     hibernate:
