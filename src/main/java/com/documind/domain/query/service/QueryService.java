@@ -139,8 +139,9 @@ public class QueryService {
                     return new AskResponse.Source(i + 1, chunk.chunkIndex(), chunk.pageNumber(), chunk.similarity());
                 }).toList();
 
-        log.info("질의 완료: queryLogId={}, sources={}, contextChars={},status={}, promptTokens={}, completionTokens={}, totalMs={}",
-                queryLogId, status, usedChunks.size(), contextChars,generation.promptTokens(), generation.completionTokens(), totalMs);
+        log.info("질의 완료: queryLogId={}, status={}, sources={}, contextChars={}, promptTokens={}, completionTokens={}, totalMs={}",
+                queryLogId, status, usedChunks.size(), contextChars,
+                generation.promptTokens(), generation.completionTokens(), totalMs);
 
         return new AskResponse(
                 queryLogId,
