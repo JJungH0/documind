@@ -1,0 +1,14 @@
+[
+  {"id": 21, "type": "검증3_다른조항단어", "question": "밤에 퇴근할 때 택시 타면 얼마까지 지원돼?", "answerable": true, "expected": [["5만"]]},
+  {"id": 22, "type": "검증3_다른조항단어", "question": "생일에 오후에 쉬어도 돼?", "answerable": true, "expected": [["오후 반차"]]},
+  {"id": 23, "type": "검증3_다른조항단어", "question": "외부 교육 들으러 가는 날도 연차 써야 돼?", "answerable": true, "expected": [["5일"]]},
+  {"id": 24, "type": "검증3_다른조항단어", "question": "팀에서 같이 볼 책을 사고 싶은데 예산이 있어?", "answerable": true, "expected": [["50만"]]},
+  {"id": 25, "type": "검증3_옆칸값", "question": "SEV2 장애는 언제까지 대응을 시작해야 돼?", "answerable": true, "expected": [["1시간"]]},
+  {"id": 26, "type": "검증3_옆칸값", "question": "자녀가 결혼하면 경조휴가 며칠이야?", "answerable": true, "expected": [["1일"]]},
+  {"id": 27, "type": "검증3_옆칸값", "question": "조부모님이 돌아가시면 경조금 얼마 받아?", "answerable": true, "expected": [["30만"]]},
+  {"id": 28, "type": "검증3_다른조항단어", "question": "입사한 지 2달 됐는데 혼자 온콜 설 수 있어?", "answerable": true, "expected": [["보조", "선임"]]},
+  {"id": 29, "type": "검증3_다른조항단어", "question": "새벽에 온콜 호출 받아서 대응하면 다음 날 쉴 수 있어?", "answerable": true, "expected": [["오전 반차", "오전에 반차"]]},
+  {"id": 30, "type": "검증3_옆칸값", "question": "국내 출장 가면 하루에 얼마 받아?", "answerable": true, "expected": [["3만"]]},
+  {"id": 31, "type": "검증3_문서에없음", "question": "육아휴직은 최대 얼마나 쓸 수 있어?", "answerable": false, "expected": []},
+  {"id": 32, "type": "검증3_문서에없음", "question": "휴대폰 요금 지원돼?", "answerable": false, "expected": []}
+]
