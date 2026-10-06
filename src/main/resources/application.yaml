@@ -68,4 +68,11 @@ documind:
     candidate-count: 20
     context-char-limit: 2000
     min-similarity: 0.25
+  pricing:
+    # OpenAI 공식 모델 기준 (2026-10-06 확인), 100만 토큰당 USD
+    # https://developers.openai.com/api/docs/pricing
+    chat-input-per-million: 0.15
+    chat-output-per-million: 0.60
+    embedding-per-million: 0.02
+    zone: Asia/Seoul
 

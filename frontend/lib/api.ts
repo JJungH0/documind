@@ -59,6 +59,7 @@ export type AskResponse = {
     searchMs: number;
     generationMs: number;
     totalMs: number;
+    cost: number;
 };
 
 export class ApiError extends Error {

@@ -1,5 +1,6 @@
 package com.documind.domain.query.service;
 
+import com.documind.domain.cost.service.CostCalculator;
 import com.documind.domain.document.repository.EmbeddingJobRepository;
 import com.documind.domain.document.repository.SimilarChunk;
 import com.documind.domain.document.service.ChunkSearchService;
@@ -50,6 +51,7 @@ public class QueryService {
     private final EmbeddingJobRepository embeddingJobRepository;
     private final RagProperties ragProperties;
     private final TransactionTemplate transactionTemplate;
+    private final CostCalculator costCalculator;
 
     public AskResponse ask(Long jobId, AskRequest req) {
         long startNanos = System.nanoTime();
@@ -156,7 +158,8 @@ public class QueryService {
                 retrieval.embeddingMs(),
                 retrieval.searchMs(),
                 generation.generationMs(),
-                totalMs
+                totalMs,
+                costCalculator.question(retrieval.queryTokens(), generation.promptTokens, generation.completionTokens)
         );
     }
 
