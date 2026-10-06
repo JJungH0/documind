@@ -2,6 +2,7 @@ package com.documind.domain.query.dto;
 
 import com.documind.domain.query.entity.enums.AnswerStatus;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record AskResponse(
@@ -17,7 +18,8 @@ public record AskResponse(
         double embeddingMs,
         double searchMs,
         double generationMs,
-        long totalMs
+        long totalMs,
+        BigDecimal cost
 ) {
     public record Source(
             int number,

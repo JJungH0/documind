@@ -51,6 +51,7 @@ export default function AssistantMessage({ response }: { response: AskResponse }
                         <Metric label="임베딩" value={`${response.embeddingMs.toFixed(0)}ms`} />
                         <Metric label="검색" value={`${response.searchMs.toFixed(1)}ms`} />
                         <Metric label="생성" value={`${response.generationMs.toFixed(0)}ms`} />
+                        <Metric label="비용" value={`$${response.cost.toFixed(6)}`}/>
                     </dl>
                     {skipped && (
                         <p className="mt-2">
