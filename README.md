@@ -2,6 +2,62 @@
 
 > PDF 문서를 올리면 그 내용을 근거로 질문에 답하는 문서 질의응답 서비스 (RAG)
 
+<p align="center">
+  <img src="docs/images/chat.png" width="49%" alt="문서의 발췌를 근거 번호와 함께 보여주는 질문 화면" />
+  <img src="docs/images/upload.png" width="49%" alt="PDF 업로드와 처리 진행률 화면" />
+</p>
+
+<br/>
+
+## 한눈에 보기
+
+| 무엇을 | 어떻게 바꿨나 | 결과 |
+|---|---|---|
+| 큰 PDF 업로드 응답 | 처리를 전용 스레드 풀로 넘기고 job 번호만 바로 응답 | **5.29초 → 0.017초** |
+| 답변 정확도 | 글자 수 대신 조항 단위로 자르고, 보낼 양을 글자 수로 맞춤 | 같은 양을 보냈을 때 **통과율 73% → 100%**, 지어낸 답 0건 |
+| 대용량 검색 | HNSW 인덱스, 재현율을 측정해 생성 설정 결정 | 청크 5만 개 **280ms → 0.3ms**, 질문 50개 모두 정답 20개 찾음 |
+| OpenAI 장애 대응 | 원인별 분류, 배치 단위 재시도, 남은 청크부터 이어서 처리, 배치 동시 전송 | 처리 **5.5초 → 1.4초**, 중단 후 이어서 처리해도 **중복 토큰 0** |
+| 하지 않기로 한 것 | 시맨틱 캐싱을 만들기 전에 질문 쌍의 유사도를 측정 | 답이 다른 쌍이 같은 쌍보다 더 비슷하게 나와 **도입하지 않음** |
+
+질문 1건의 비용은 약 **$0.00025**이고, 질문마다 화면에 표시됩니다.
+
+<br/>
+
+## 구조
+
+```mermaid
+flowchart LR
+    User["사용자<br/>Next.js"]
+    API["Spring Boot"]
+    OAI["OpenAI API<br/>임베딩 · gpt-4o-mini"]
+    DB[("PostgreSQL<br/>pgvector · HNSW")]
+
+    User -- "PDF 업로드" --> API
+    User -- "질문" --> API
+
+    subgraph Ingest["문서 처리 (비동기 스레드 풀)"]
+        direction TB
+        I1["PDF 파싱 (PDFBox)"] --> I2["조항 단위로 자르기"] --> I3["임베딩<br/>100개씩, 4묶음 동시"]
+    end
+
+    subgraph Query["질문 처리"]
+        direction TB
+        Q1["질문 임베딩"] --> Q2["벡터 검색"] --> Q3["발췌 고르기<br/>2,000자까지"] --> Q4["답변 생성"]
+    end
+
+    API -- "202 + job 번호" --> I1
+    API --> Q1
+    I3 --> OAI
+    Q1 --> OAI
+    Q4 --> OAI
+    I3 -- "배치마다 커밋" --> DB
+    Q2 --> DB
+    Q4 -- "토큰 · 비용 기록" --> DB
+```
+
+- 문서 처리는 요청을 받은 즉시 job 번호로 응답하고, 진행률은 따로 조회합니다. 실패하면 원인(키, 잔액, 한도 초과, 일시 오류)을 구분해 기록하고, 다시 해도 되는 실패만 남은 청크부터 이어서 처리합니다.
+- 질문 처리는 질문과 가장 가까운 청크를 찾아 2,000자까지 골라 보내고, 모델은 그 발췌만 근거로 번호를 붙여 답합니다.
+
 <br/>
 
 ## 이 프로젝트에서 다룬 것
@@ -349,10 +405,10 @@ Execution Time: 0.814 ms
 
 ```mermaid
 xychart-beta
-    title "질문 1건 처리 시간 중앙값 (ms, 42회)"
-    x-axis ["질문 벡터 변환", "검색", "답변 생성"]
-    y-axis "시간 (ms)" 0 --> 1000
-    bar [153.9, 10.0, 853.2]
+  title "질문 1건 처리 시간 중앙값 (ms, 42회)"
+  x-axis ["질문 벡터 변환", "검색", "답변 생성"]
+  y-axis "시간 (ms)" 0 --> 1000
+  bar [153.9, 10.0, 853.2]
 ```
 
 전체 시간의 중앙값은 1,028ms이고 그중 검색은 10ms입니다. 지금 규모에서는 기다리는 시간 대부분이 OpenAI 호출입니다. (샘플 규정집을 500자로 자르고 청크 5개를 보내던 때의 측정입니다. 질문 14개 × 3회, 모델을 부르지 않은 3회도 포함되어 답변 생성 중앙값은 실제보다 조금 낮게 나옵니다. 지금 설정(조항 단위, 2,000자)에서는 답변 생성 중앙값이 약 1,050ms입니다.)
@@ -411,7 +467,7 @@ CREATE SEQUENCE document_chunks_seq START 1 INCREMENT 50;
 ```java
 @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "documentChunksSeq")
 @SequenceGenerator(name = "documentChunksSeq", sequenceName = "document_chunks_seq",
-                   allocationSize = 50)   // SQL의 INCREMENT와 같아야 함
+        allocationSize = 50)   // SQL의 INCREMENT와 같아야 함
 private Long id;
 ```
 
@@ -872,12 +928,12 @@ WHERE job_id = 7 AND content LIKE '%야근 식대%';
 
 ```java
 for (T item : ranked) {
-    int size = length.applyAsInt(item);
+int size = length.applyAsInt(item);
     if (!selected.isEmpty() && used + size > charLimit) {
         break;
-    }
-    selected.add(item);
-    used += size;
+        }
+        selected.add(item);
+used += size;
 }
 ```
 
@@ -1300,8 +1356,8 @@ HNSW는 벡터들을 층층이 연결한 그래프입니다. 위층은 멀리 �
 SET LOCAL maintenance_work_mem = '1GB';
 
 CREATE INDEX idx_document_chunks_embedding_hnsw
-    ON document_chunks USING hnsw (embedding vector_cosine_ops)
-    WITH (m = 32, ef_construction = 128);
+  ON document_chunks USING hnsw (embedding vector_cosine_ops)
+  WITH (m = 32, ef_construction = 128);
 ```
 
 - V5 마이그레이션으로 추가했고, 생성 메모리는 이 마이그레이션 트랜잭션에서만 늘립니다.
