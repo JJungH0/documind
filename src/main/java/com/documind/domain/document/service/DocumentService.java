@@ -8,10 +8,14 @@ import com.documind.global.exception.BusinessException;
 import com.documind.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -39,6 +43,7 @@ public class DocumentService {
                 });
 
         String storedPath = fileStorage.store(file);
+        deleteOnRollback(storedPath);
 
         Document document = Document.builder()
                 .originalFilename(file.getOriginalFilename())
@@ -47,7 +52,14 @@ public class DocumentService {
                 .fileSize(file.getSize())
                 .build();
 
-        documentRepository.save(document);
+        try {
+            documentRepository.save(document);
+        } catch (DataIntegrityViolationException e) {
+            if (isDuplicateHash(e)) {
+                throw new BusinessException(ErrorCode.DUPLICATE_DOCUMENT, "동시 업로드로 감지된 중복: hash=" + contentHash);
+            }
+            throw e;
+        }
 
         Path path = fileStorage.resolve(storedPath);
         PdfParser.ParseResult result = pdfParser.parse(path);
@@ -80,6 +92,23 @@ public class DocumentService {
             throw new BusinessException(ErrorCode.UNSUPPORTED_FILE_TYPE,
                     "요청된 타입: " + file.getContentType());
         }
+    }
+
+    private static boolean isDuplicateHash(DataIntegrityViolationException e) {
+        String message = e.getMostSpecificCause().getMessage();
+        return message != null && message.contains("uq_documents_content_hash");
+    }
+
+    private void deleteOnRollback(String storedPath) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == STATUS_ROLLED_BACK) {
+                    fileStorage.delete(storedPath);
+                    log.info("롤백되어 저장 파일 삭제: path={}", storedPath);
+                }
+            }
+        });
     }
 
 }
