@@ -3,6 +3,7 @@ package com.documind.domain.document.service;
 import com.documind.global.config.StorageProperties;
 import com.documind.global.exception.BusinessException;
 import com.documind.global.exception.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HexFormat;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class FileStorage {
 
@@ -66,5 +68,13 @@ public class FileStorage {
 
     public Path resolve(String relativePath) {
         return root.resolve(relativePath).normalize();
+    }
+
+    public void delete(String relativePath) {
+        try {
+            Files.deleteIfExists(resolve(relativePath));
+        } catch (IOException e) {
+            log.warn("저장 파일 삭제 실패: path={}", relativePath, e);
+        }
     }
 }
