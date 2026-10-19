@@ -170,7 +170,7 @@ public class EmbeddingJobProcessor {
             }
         } finally {
 
-            pool.shutdown();
+            pool.shutdownNow();
         }
     }
 
